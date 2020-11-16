@@ -24,9 +24,9 @@ data Ty : Set where
 
 open import Data.Unit
 
-evalTy : Ty → Set
-evalTy unit = ⊤
-evalTy (σ ⟶ τ) = evalTy σ → evalTy τ
+⟦_⟧ₜ : Ty → Set
+⟦ unit ⟧ₜ = ⊤
+⟦ σ ⟶ τ ⟧ₜ = ⟦ σ ⟧ₜ → ⟦ τ ⟧ₜ
 
 open import Data.Vec
 
@@ -45,16 +45,18 @@ data L : Context n → Ty → Set where
 
 data Env : Context n → Set where
   [] : Env []
-  _∷_ : {τ : Ty} → evalTy τ → Env Γ → Env (τ ∷ Γ)
+  _∷_ : {τ : Ty} → ⟦ τ ⟧ₜ → Env Γ → Env (τ ∷ Γ)
 
-lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → evalTy (lookup Γ i)
+lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → ⟦ lookup Γ i ⟧ₜ
 lookupEnv {Γ = τ ∷ _} (x ∷ _) zero = x
 lookupEnv {Γ = _ ∷ Γ} (_ ∷ ρ) (suc i) = lookupEnv ρ i
 
-evalL : L Γ τ → Env Γ → evalTy τ
-evalL (Var i)   ρ = lookupEnv ρ i
-evalL (App u v) ρ = (evalL u ρ) (evalL v ρ)
-evalL (Lam u)   ρ = λ x → evalL u (x ∷ ρ)
+⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
+⟦ Var i ⟧   ρ = lookupEnv ρ i
+⟦ App u v ⟧ ρ = (⟦ u ⟧ ρ) (⟦ v ⟧ ρ)
+⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (x ∷ ρ)
 
-evalL₀ : L [] τ → evalTy τ
-evalL₀ e = evalL e []
+⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
+⟦ e ⟧₀ = ⟦ e ⟧ []
+
+-- TODO: rework evalL to avoid evalL under λ .
