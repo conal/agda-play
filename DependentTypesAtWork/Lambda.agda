@@ -10,10 +10,10 @@ private
   variable
     n : ℕ
 
-data L : ℕ → Set where
-  Var : Fin n → L n
-  App : L n → L n → L n
-  Lam : L (suc n) → L n
+data L₁ : ℕ → Set where
+  Var₁ : Fin n → L₁ n
+  App₁ : L₁ n → L₁ n → L₁ n
+  Lam₁ : L₁ (suc n) → L₁ n
 
 -- Try also to define typed lambda terms as an inductive family indexed by the
 -- type of the term.
@@ -38,17 +38,10 @@ private
     σ τ : Ty
     Γ : Context n
 
--- data L′ : Context n → Ty → Set where
---   Var′ : (Γ : Context n) → (i : Fin n) → Γ [ i ]= τ → L′ Γ τ
---   App′ : L′ Γ (σ ⟶ τ) → L′ Γ σ → L′ Γ τ
---   Lam′ : L′ (σ ∷ Γ) τ → L′ Γ (σ ⟶ τ)
-
--- Fine, but try an alternative:
-
-data L′ : Context n → Ty → Set where
-  Var′ : {Γ : Context n} → (i : Fin n) → L′ Γ (lookup Γ i)
-  App′ : L′ Γ (σ ⟶ τ) → L′ Γ σ → L′ Γ τ
-  Lam′ : L′ (σ ∷ Γ) τ → L′ Γ (σ ⟶ τ)
+data L : Context n → Ty → Set where
+  Var : {Γ : Context n} → (i : Fin n) → L Γ (lookup Γ i)
+  App : L Γ (σ ⟶ τ) → L Γ σ → L Γ τ
+  Lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
 
 data Env : Context n → Set where
   nil : Env []
@@ -58,10 +51,10 @@ lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → evalTy (looku
 lookupEnv {Γ = τ ∷ _} (cons x _) zero = x
 lookupEnv {Γ = _ ∷ Γ} (cons _ ρ) (suc i) = lookupEnv ρ i
 
-evalL′ : L′ Γ τ → Env Γ → evalTy τ
-evalL′ (Var′ i)   ρ = lookupEnv ρ i
-evalL′ (App′ u v) ρ = (evalL′ u ρ) (evalL′ v ρ)
-evalL′ (Lam′ u)   ρ = λ x → evalL′ u (cons x ρ)
+evalL : L Γ τ → Env Γ → evalTy τ
+evalL (Var i)   ρ = lookupEnv ρ i
+evalL (App u v) ρ = (evalL u ρ) (evalL v ρ)
+evalL (Lam u)   ρ = λ x → evalL u (cons x ρ)
 
-evalL′₀ : L′ [] τ → evalTy τ
-evalL′₀ e = evalL′ e nil
+evalL₀ : L [] τ → evalTy τ
+evalL₀ e = evalL e nil
