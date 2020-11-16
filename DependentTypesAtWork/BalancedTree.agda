@@ -2,10 +2,15 @@
 
 module BalancedTree where
 
+open import Level using (Level)
 open import Data.Nat
 
+private
+  variable
+    ℓ : Level
+
 -- Perfect binary leaf trees
-data Perfect (A : Set) : ℕ → Set where
+data Perfect (A : Set ℓ) : ℕ → Set ℓ where
   plf : A → Perfect A zero
   pnd : {n : ℕ} → Perfect A n → Perfect A n → Perfect A (suc n)
 
@@ -20,6 +25,9 @@ data WithinOne : ℕ → ℕ → ℕ → Set where
   n+1,n : ∀ (n : ℕ) → WithinOne (suc n) n (suc n)
 
 -- Height-balanced binary leaf trees
-data Balanced (A : Set) : ℕ → Set where
+data Balanced (A : Set ℓ) : ℕ → Set ℓ where
   blf : A → Balanced A zero
   bnd : {m n p : ℕ} → Balanced A m → Balanced A n → WithinOne m n p → Balanced A (suc p)
+
+-- I could instead omit the max from WithinOne and define a max function on that
+-- type instead.
