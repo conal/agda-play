@@ -56,24 +56,18 @@ push x ρ (suc i) = ρ i
 lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → ⟦ lookup Γ i ⟧ₜ
 lookupEnv = id
 
-⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
-⟦ Var i ⟧   ρ = ρ i
-⟦ App u v ⟧ ρ = (⟦ u ⟧ ρ) (⟦ v ⟧ ρ)
-⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (push x ρ)
-
--- TODO: rework evalL to avoid evalL under λ .
-
-app : ∀ {p q r : Set} → (p → q → r) → (p → q) → (p → r)
-app f g x = (f x) (g x)
-
--- -- Lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
--- lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
-
 -- ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
--- ⟦ Var i ⟧   = (_$ i)
--- ⟦ App u v ⟧ = app ⟦ u ⟧ ⟦ v ⟧
--- ⟦ Lam u ⟧   = (⟦ u ⟧ ∘_) ∘ flip push
---               -- λ ρ → ⟦ u ⟧ ∘ flip push ρ
+-- ⟦ Var i ⟧   ρ = ρ i
+-- ⟦ App u v ⟧ ρ = (⟦ u ⟧ ρ) (⟦ v ⟧ ρ)
+-- ⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (push x ρ)
+
+-- Rework to avoid ⟦_⟧ under λ
+
+⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
+⟦ Var i ⟧   = (_$ i)
+⟦ App u v ⟧ = ⟦ u ⟧ ˢ ⟦ v ⟧
+⟦ Lam u ⟧   = (⟦ u ⟧ ∘_) ∘ flip push
+              -- λ ρ → ⟦ u ⟧ ∘ flip push ρ
 
 ⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
 ⟦ e ⟧₀ = ⟦ e ⟧ nil
