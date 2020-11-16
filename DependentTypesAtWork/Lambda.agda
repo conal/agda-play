@@ -54,16 +54,16 @@ push x ρ zero    = x
 push x ρ (suc i) = ρ i
 
 -- ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
--- ⟦ Var i ⟧   ρ = ρ i
+-- ⟦  Var i  ⟧ ρ = ρ i
 -- ⟦ App u v ⟧ ρ = (⟦ u ⟧ ρ) (⟦ v ⟧ ρ)
--- ⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (push x ρ)
+-- ⟦  Lam u  ⟧ ρ = λ x → ⟦ u ⟧ (push x ρ)
 
 -- Rework to avoid ⟦_⟧ under λ
 
 ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
-⟦ Var i ⟧   = (_$ i)
+⟦  Var i  ⟧ = (_$ i)
 ⟦ App u v ⟧ = ⟦ u ⟧ ˢ ⟦ v ⟧
-⟦ Lam u ⟧   = (⟦ u ⟧ ∘_) ∘ flip push
+⟦  Lam u  ⟧ = (⟦ u ⟧ ∘_) ∘ flip push
               -- λ ρ → ⟦ u ⟧ ∘ flip push ρ
 
 ⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
