@@ -50,11 +50,8 @@ nil : Env []
 nil ()
 
 push : {τ : Ty} → ⟦ τ ⟧ₜ → Env Γ → Env (τ ∷ Γ)
-push x ρ zero = x
+push x ρ zero    = x
 push x ρ (suc i) = ρ i
-
-lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → ⟦ lookup Γ i ⟧ₜ
-lookupEnv = id
 
 -- ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
 -- ⟦ Var i ⟧   ρ = ρ i
@@ -72,4 +69,4 @@ lookupEnv = id
 ⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
 ⟦ e ⟧₀ = ⟦ e ⟧ nil
 
--- TODO: level polymorphism
+-- TODO: level polymorphism.
