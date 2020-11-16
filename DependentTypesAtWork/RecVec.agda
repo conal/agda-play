@@ -25,12 +25,14 @@ private
 
 open import Function
 
-_^_ : (A → A) → ℕ → (A → A)
-f ^ zero  = id
-f ^ suc n = f ∘ (f ^ n)
+iter : A → (A → A) → ℕ → A
+iter z f zero    = z
+iter z f (suc n) = f (iter z f n)
+
+-- Is iter defined somewhere standard?
 
 Vec : Set ℓ → ℕ → Set ℓ
-Vec A n = ((A ×_) ^ n) ⊤
+Vec A = iter ⊤ (A ×_)
 
 head : Vec A (suc n) → A
 head (a , _) = a
@@ -56,8 +58,4 @@ _!_ {n = suc m} (_ , as) (just i) = as ! i
 
 -- Perfect binary leaf tree
 BTree : Set ℓ → ℕ → Set ℓ
-BTree A n = ((λ τ → τ × τ) ^ n) A
-
--- More convenient to define. Perhaps better fits Haskell style.
-BTree′ : ℕ → Set ℓ → Set ℓ
-BTree′ = (λ τ → τ × τ) ^_
+BTree A = iter A (λ τ → τ × τ)
