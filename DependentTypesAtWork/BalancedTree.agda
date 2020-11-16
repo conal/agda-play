@@ -27,4 +27,5 @@ data WithinOne : ℕ → ℕ → Set where
 -- Height-balanced binary leaf trees
 data Balanced (A : Set ℓ) : ℕ → Set ℓ where
   blf : A → Balanced A zero
-  bnd : {m n p : ℕ} → Balanced A m → Balanced A n → WithinOne m n → Balanced A (suc (m ⊔ n))
+  bnd : {m n p : ℕ} → Balanced A m → Balanced A n → WithinOne m n
+      → Balanced A (suc (m ⊔ n))
