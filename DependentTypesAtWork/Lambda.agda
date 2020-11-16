@@ -44,17 +44,17 @@ data L : Context n → Ty → Set where
   Lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
 
 data Env : Context n → Set where
-  nil : Env []
-  cons : {τ : Ty} → evalTy τ → Env Γ → Env (τ ∷ Γ)
+  [] : Env []
+  _∷_ : {τ : Ty} → evalTy τ → Env Γ → Env (τ ∷ Γ)
 
 lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → evalTy (lookup Γ i)
-lookupEnv {Γ = τ ∷ _} (cons x _) zero = x
-lookupEnv {Γ = _ ∷ Γ} (cons _ ρ) (suc i) = lookupEnv ρ i
+lookupEnv {Γ = τ ∷ _} (x ∷ _) zero = x
+lookupEnv {Γ = _ ∷ Γ} (_ ∷ ρ) (suc i) = lookupEnv ρ i
 
 evalL : L Γ τ → Env Γ → evalTy τ
 evalL (Var i)   ρ = lookupEnv ρ i
 evalL (App u v) ρ = (evalL u ρ) (evalL v ρ)
-evalL (Lam u)   ρ = λ x → evalL u (cons x ρ)
+evalL (Lam u)   ρ = λ x → evalL u (x ∷ ρ)
 
 evalL₀ : L [] τ → evalTy τ
-evalL₀ e = evalL e nil
+evalL₀ e = evalL e []
