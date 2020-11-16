@@ -5,6 +5,8 @@
 
 open import Data.Nat
 open import Data.Fin
+open import Data.Vec
+open import Function
 
 private
   variable
@@ -22,14 +24,6 @@ data Ty : Set where
   unit : Ty
   _⟶_ : Ty → Ty → Ty
 
-open import Data.Unit
-
-⟦_⟧ₜ : Ty → Set
-⟦ unit ⟧ₜ = ⊤
-⟦ σ ⟶ τ ⟧ₜ = ⟦ σ ⟧ₜ → ⟦ τ ⟧ₜ
-
-open import Data.Vec
-
 Context : ℕ → Set
 Context n = Vec Ty n
 
@@ -43,20 +37,45 @@ data L : Context n → Ty → Set where
   App : L Γ (σ ⟶ τ) → L Γ σ → L Γ τ
   Lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
 
-data Env : Context n → Set where
-  [] : Env []
-  _∷_ : {τ : Ty} → ⟦ τ ⟧ₜ → Env Γ → Env (τ ∷ Γ)
+open import Data.Unit
+
+⟦_⟧ₜ : Ty → Set
+⟦ unit ⟧ₜ = ⊤
+⟦ σ ⟶ τ ⟧ₜ = ⟦ σ ⟧ₜ → ⟦ τ ⟧ₜ
+
+Env : ∀ {n} → Context n → Set
+Env {n} Γ = (i : Fin n) → ⟦ lookup Γ i ⟧ₜ
+
+nil : Env []
+nil ()
+
+push : {τ : Ty} → ⟦ τ ⟧ₜ → Env Γ → Env (τ ∷ Γ)
+push x ρ zero = x
+push x ρ (suc i) = ρ i
 
 lookupEnv : {Γ : Context n} → (ρ : Env Γ) → (i : Fin n) → ⟦ lookup Γ i ⟧ₜ
-lookupEnv {Γ = τ ∷ _} (x ∷ _) zero = x
-lookupEnv {Γ = _ ∷ Γ} (_ ∷ ρ) (suc i) = lookupEnv ρ i
+lookupEnv = id
 
 ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
-⟦ Var i ⟧   ρ = lookupEnv ρ i
+⟦ Var i ⟧   ρ = ρ i
 ⟦ App u v ⟧ ρ = (⟦ u ⟧ ρ) (⟦ v ⟧ ρ)
-⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (x ∷ ρ)
-
-⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
-⟦ e ⟧₀ = ⟦ e ⟧ []
+⟦ Lam u ⟧   ρ = λ x → ⟦ u ⟧ (push x ρ)
 
 -- TODO: rework evalL to avoid evalL under λ .
+
+app : ∀ {p q r : Set} → (p → q → r) → (p → q) → (p → r)
+app f g x = (f x) (g x)
+
+-- -- Lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
+-- lam : L (σ ∷ Γ) τ → L Γ (σ ⟶ τ)
+
+-- ⟦_⟧ : L Γ τ → Env Γ → ⟦ τ ⟧ₜ
+-- ⟦ Var i ⟧   = (_$ i)
+-- ⟦ App u v ⟧ = app ⟦ u ⟧ ⟦ v ⟧
+-- ⟦ Lam u ⟧   = (⟦ u ⟧ ∘_) ∘ flip push
+--               -- λ ρ → ⟦ u ⟧ ∘ flip push ρ
+
+⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
+⟦ e ⟧₀ = ⟦ e ⟧ nil
+
+-- TODO: level polymorphism
