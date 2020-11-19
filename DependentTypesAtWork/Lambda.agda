@@ -66,7 +66,11 @@ push x ρ (suc i) = ρ i
 ⟦  Lam u  ⟧ = (⟦ u ⟧ ∘_) ∘ flip push
               -- λ ρ → ⟦ u ⟧ ∘ flip push ρ
 
-⟦_⟧₀ : L [] τ → ⟦ τ ⟧ₜ
+-- Closed terms
+Closed : Ty → Set
+Closed = L []
+
+⟦_⟧₀ : Closed τ → ⟦ τ ⟧ₜ
 ⟦ e ⟧₀ = ⟦ e ⟧ nil
 
 -- TODO: level polymorphism.
