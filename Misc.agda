@@ -30,12 +30,11 @@ n+0 {zero} = refl
 n+0 {suc n} = cong suc (n+0 {n})
 {-# REWRITE n+0 #-}
 
-
 map-++ : (f : A → B) → (as₁ : Vec A n) → (as₂ : Vec A m)
        → map f as₁ ++ map f as₂ ≡ map f (as₁ ++ as₂)
 map-++ f [] as₂ = refl
 map-++ f (x ∷ as₁) as₂ = cong (f x ∷_) (map-++ f as₁ as₂)
-{-# REWRITE map-++ #-}
+-- {-# REWRITE map-++ #-}
 
 -- Needs heterogeneous equality
 -- Already in Data.Vec.Properties.WithK

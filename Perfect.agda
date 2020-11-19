@@ -11,9 +11,8 @@ open import Data.Nat.Properties using (+-assoc)
 open import Data.Vec as Vec hiding (map)
 import Relation.Binary.PropositionalEquality as Eq
 
--- open Eq using (_≡_; refl; sym ; cong ; cong₂)
-open Eq using (_≡_) renaming (refl to refl≡)
--- open Eq.≡-Reasoning
+-- open Eq using (_≡_; refl; sym ; cong)
+open Eq using (_≡_ ; cong₂) renaming (refl to refl≡)
 
 open import Misc
 
@@ -114,11 +113,14 @@ flatten∘map : ∀ (f : A → B) (t : T A n)
             → flatten (map f t) ≡ Vec.map f (flatten t)
 flatten∘map f (lf x) = refl≡
 flatten∘map f (nd u v)
-  -- relies on {-# REWRITE map-++ #-} in Misc
-  rewrite flatten∘map f u | flatten∘map f v = refl≡
+  rewrite flatten∘map f u
+        | flatten∘map f v
+        | map-++ f (flatten u) (flatten v)
+        = refl≡
+ -- where
+ --   {-# REWRITE map-++ #-}  -- Alternative to "| map-++ f ..."
 
 -- -- Written out
--- flatten∘map f (lf x) = refl
 -- flatten∘map f (nd u v) =
 --   begin
 --     flatten (map f (nd u v))
@@ -131,18 +133,7 @@ flatten∘map f (nd u v)
 --       ≡⟨ map-++ f (flatten u) (flatten v) ⟩
 --     Vec.map f (flatten (nd u v))
 --       ∎
-
--- flatten∘fold : ∀ (_∙_ : A → A → A) (t : T A n)
---              → fold _∙_ t ≡ foldr₁ _∙_ (flatten t)
--- flatten∘fold _∙_ t = ?
-
--- 2 ^ n != suc _n_202 of type ℕ
--- when checking that the inferred type of an application
---   Vec A (2 ^ n)
--- matches the expected type
---   Vec A (suc _n_202)
-
--- I think I need an associative fold anyway.
+--  where open Eq.≡-Reasoning
 
 open import Algebra.Bundles
 
@@ -171,7 +162,6 @@ module _ {c ℓ} (M : Monoid c ℓ) where
 
   foldTV : ∀ (t : T C n) → foldT t ≈ foldV (flatten t)
   foldTV (lf x) = sym (identityʳ x)
-
   foldTV (nd u v) =
     begin
         foldT u ∙ foldT v
@@ -180,5 +170,3 @@ module _ {c ℓ} (M : Monoid c ℓ) where
       ≈⟨ foldV-∙ (flatten u) (flatten v) ⟩
         foldV (flatten u ++ flatten v)
       ∎
-
-  
