@@ -10,8 +10,10 @@ open import Data.Nat
 open import Data.Nat.Properties using (+-assoc)
 open import Data.Vec as Vec hiding (map)
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; sym ; cong ; cong₂)
-open Eq.≡-Reasoning
+
+-- open Eq using (_≡_; refl; sym ; cong ; cong₂)
+open Eq using (_≡_) renaming (refl to refl≡)
+-- open Eq.≡-Reasoning
 
 open import Misc
 
@@ -32,6 +34,8 @@ flatten : T A n → Vec A (2 ^ n)
 flatten (lf x) = [ x ]
 flatten (nd u v) = flatten u ++ flatten v
 
+{-
+
 private
   sym-+-assoc : ∀ {m n o} → m + (n + o) ≡ (m + n) + o
   sym-+-assoc {m} {n} {o} = sym (+-assoc m n o)
@@ -47,21 +51,22 @@ flatten′ t = flat t []
 
 module _ where
 
-  -- private
-  --   -- Trick to work avoid need for heterogeneous equality
-  --   +-assoc′ : ∀ {m n o} → (m + n) + o ≡ m + (n + o)
-  --   +-assoc′ {m} {n} {o} = +-assoc m n o
-  --   {-# REWRITE +-assoc′ #-}
+  private
+    -- Trick to work avoid need for heterogeneous equality
+    +-assoc′ : ∀ {m n o} → (m + n) + o ≡ m + (n + o)
+    +-assoc′ {m} {n} {o} = +-assoc m n o
+    {-# REWRITE +-assoc′ #-}
 
-  -- ++-assoc : ∀ (as₁ : Vec A m) (as₂ : Vec A n) (as₃ : Vec A o)
-  --          → (as₁ ++ as₂) ++ as₃ ≡ as₁ ++ (as₂ ++ as₃)
-  -- ++-assoc [] as₂ as₃ = refl
-  -- ++-assoc (x ∷ as₁) as₂ as₃
-  --   rewrite (++-assoc as₁ as₂ as₃) = refl
+  ++-assoc : ∀ (as₁ : Vec A m) (as₂ : Vec A n) (as₃ : Vec A o)
+           → (as₁ ++ as₂) ++ as₃ ≡ as₁ ++ (as₂ ++ as₃)
+  ++-assoc [] as₂ as₃ = refl
+  ++-assoc (x ∷ as₁) as₂ as₃
+    rewrite (++-assoc as₁ as₂ as₃) = refl
 
 -- I'd like to move ++-assoc to another module (e.g., Misc), but when I do so, I
 -- get an internal error. TODO: File a bug report.
 
+-}
 
 {-
 
@@ -107,10 +112,10 @@ fold _∙_ (nd u v) = fold _∙_ u ∙ fold _∙_ v
 
 flatten∘map : ∀ (f : A → B) (t : T A n)
             → flatten (map f t) ≡ Vec.map f (flatten t)
-flatten∘map f (lf x) = refl
+flatten∘map f (lf x) = refl≡
 flatten∘map f (nd u v)
   -- relies on {-# REWRITE map-++ #-} in Misc
-  rewrite flatten∘map f u | flatten∘map f v = refl
+  rewrite flatten∘map f u | flatten∘map f v = refl≡
 
 -- -- Written out
 -- flatten∘map f (lf x) = refl
@@ -136,3 +141,44 @@ flatten∘map f (nd u v)
 --   Vec A (2 ^ n)
 -- matches the expected type
 --   Vec A (suc _n_202)
+
+-- I think I need an associative fold anyway.
+
+open import Algebra.Bundles
+
+module _ {c ℓ} (M : Monoid c ℓ) where
+
+  open Monoid M renaming (Carrier to C)
+
+  open import Relation.Binary.Reasoning.Setoid (setoid)
+
+  foldV : Vec C n → C
+  foldV [] = ε
+  foldV (c ∷ cs) = c ∙ foldV cs
+
+  foldV-∙ : ∀ (cs₁ : Vec C m) (cs₂ : Vec C n)
+          → foldV cs₁ ∙ foldV cs₂ ≈ foldV (cs₁ ++ cs₂)
+  foldV-∙ [] cs₂ = identityˡ (foldV cs₂)
+  foldV-∙ (x ∷ cs₁) cs₂ =
+    begin
+      (x ∙ foldV cs₁) ∙ foldV cs₂ ≈⟨ assoc x (foldV cs₁) (foldV cs₂) ⟩
+      x ∙ (foldV cs₁ ∙ foldV cs₂) ≈⟨ ∙-congˡ (foldV-∙ cs₁ cs₂) ⟩
+      x ∙ foldV (cs₁ ++ cs₂)    ∎
+
+  foldT : T C n → C
+  foldT (lf x) = x
+  foldT (nd u v) = foldT u ∙ foldT v
+
+  foldTV : ∀ (t : T C n) → foldT t ≈ foldV (flatten t)
+  foldTV (lf x) = sym (identityʳ x)
+
+  foldTV (nd u v) =
+    begin
+        foldT u ∙ foldT v
+      ≈⟨ ∙-cong (foldTV u) (foldTV v) ⟩
+        foldV (flatten u) ∙ foldV (flatten v)
+      ≈⟨ foldV-∙ (flatten u) (flatten v) ⟩
+        foldV (flatten u ++ flatten v)
+      ∎
+
+  
